@@ -51,5 +51,7 @@
         "xterm-addon-web-links": "^0.1.0",
         "xterm-theme": "^1.1.0"
     },
-    "dependencies": {}
+    "dependencies": {
+        "vue-runtime-helpers": "^1.1.2"
+    }
 }
