@@ -5,7 +5,7 @@ const args = require('args');
 const app = require('../app');
 const createSocketServer = require('../socket/index');
 
-args.option('port', 'The port on which the app will be running', 3000);
+args.option('port', 'The port on which the app will be running', 6860);
 const flags = args.parse(process.argv);
 let port = flags.port;
 

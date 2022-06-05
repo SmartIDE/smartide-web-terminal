@@ -4,6 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
+        "start": "node ./bin/webshell",
         "dev": "node ./bin/webshell",
         "build": "npm i && cd assets && npm i && npm run build"
     },

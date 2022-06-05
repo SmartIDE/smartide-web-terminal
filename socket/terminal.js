@@ -1,3 +1,4 @@
+const { option } = require('args');
 const pty = require('node-pty');
 const os = require('os');
 const userhome = require('user-home');
@@ -6,6 +7,37 @@ const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
 let ptyContainers = {};
 
 module.exports = socket => {
+    socket.on('docker', option => {
+        let ptyProcess = pty.spawn(shell, ['--login'], {
+            name: 'xterm-color',
+            cols: option.cols || 80,
+            rows: option.rows || 24,
+            cwd: option.cwd || userhome,
+            env: process.env
+        });
+        ptyProcess.onData(function(data) {
+            if (data.indexOf(option.filtration) == 0) {
+                console.log(data)
+                var tet = '{ "containerId":"d6f9818f8067","containerName":"smartide-web-terminal-smartide-web-terminal-1"}'
+                var b = JSON.parse(tet)
+                console.log("b", b)
+                let arr = data.split(option.filtration)
+                let retArr = new Array();
+                arr.forEach(element => {
+                    if (element) {
+                        let jsonStr = element.replace('\r\n','').replace('containerId:','"containerId":"').replace(',containerName:','","containerName":"').replace(' }','" }')
+                        retArr.push(JSON.parse(jsonStr))
+                    }
+                });
+                console.log("ret", retArr)
+                socket.emit(option.name + '-docker-output', retArr)
+            }
+        });
+        socket.on(option.name + '-docker-input', data => {
+            console.log("pty", data)
+            ptyProcess.write(data)
+        });
+    });
     socket.on('create', option => {
         let ptyProcess = pty.spawn(shell, ['--login'], {
             name: 'xterm-color',

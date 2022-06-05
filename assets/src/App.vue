@@ -1,4 +1,3 @@
-
 <template>
   <div
     class="terminal"
@@ -8,7 +7,7 @@
     :style="{backgroundColor: bgColor, color: fontColor}"
   >
     <div class="header">
-      <span>终端</span>
+      <span>Terminal</span>
       <ul class="menu-list">
         <li class="active">
           <select
@@ -19,6 +18,7 @@
             <option :value="index" v-for="(item, index) in terminals" :key="index">{{ '终端'+index }}</option>
           </select>
         </li>
+        <li class="el-icon-search" @click="dialogDockerVisible = true"></li>
         <li class="el-icon-plus" @click="handlePlus"></li>
         <li class="el-icon-delete" @click="handleDelete"></li>
       </ul>
@@ -63,6 +63,7 @@
       <v-contextmenu-item @click="dialogVisible = true">设置</v-contextmenu-item>
     </v-contextmenu>
     <config-modal :visible.sync="dialogVisible" @setTheme="handleChangeTheme"></config-modal>
+    <docker-modal :visible.sync="dialogDockerVisible"></docker-modal>
   </div>
 </template>
 <script>
@@ -72,6 +73,7 @@ import { WebLinksAddon } from "xterm-addon-web-links";
 import axios from "@/apis/index";
 import Terminal from "./Xterm";
 import ConfigModal from "./components/Config";
+import DockerModal from './components/Docker';
 
 function isInRect(rect, event) {
   if (
@@ -95,6 +97,7 @@ export default {
       socket: null,
       currentTab: 0,
       dialogVisible: false,
+      dialogDockerVisible: false,
       theme: window.localStorage.getItem("theme")
         ? JSON.parse(window.localStorage.getItem("theme"))
         : null
@@ -117,7 +120,8 @@ export default {
     }
   },
   components: {
-    ConfigModal
+    ConfigModal,
+    DockerModal
   },
   methods: {
     createTerminal(container, callback, cwd = null) {
@@ -168,6 +172,7 @@ export default {
         });
       });
     },
+    //增加终端
     handlePlus() {
       let tab = { name: "tab" + this.terminals.length, children: [] };
       this.createTerminal(tab, () => {
@@ -175,6 +180,7 @@ export default {
         this.currentTab = this.terminals.length - 1;
       });
     },
+    //删除终端
     handleDelete() {
       if (
         this.terminals.length == 1 &&
@@ -274,6 +280,7 @@ export default {
     },
 
     handleChangeTheme(val) {
+      console.log(val)
       this.theme = val;
       this.terminals.forEach(tab => {
         tab.children.forEach(pane => {
@@ -282,6 +289,11 @@ export default {
       });
 
       window.localStorage.setItem("theme", JSON.stringify(val));
+    },
+
+    handleAddDocker() {
+      this.dialogDockerVisible = true;
+
     },
 
     close() {
@@ -382,6 +394,7 @@ export default {
       margin-right: 5px;
     }
     .el-icon-plus,
+    .el-icon-docker,
     .el-icon-delete {
       font-size: 18px;
     }
