@@ -15,7 +15,7 @@
             v-model="currentTab"
             :style="{backgroundColor: bgColor, color: fontColor }"
           >
-            <option :value="index" v-for="(item, index) in terminals" :key="index">{{ '终端'+index }}</option>
+            <option :value="index" v-for="(item, index) in terminals" :key="index">{{ item.name }}</option>
           </select>
         </li>
         <li class="el-icon-search" @click="dialogDockerVisible = true"></li>
@@ -63,7 +63,7 @@
       <v-contextmenu-item @click="dialogVisible = true">设置</v-contextmenu-item>
     </v-contextmenu>
     <config-modal :visible.sync="dialogVisible" @setTheme="handleChangeTheme"></config-modal>
-    <docker-modal :visible.sync="dialogDockerVisible"></docker-modal>
+    <docker-modal :visible.sync="dialogDockerVisible" @selectedDocker="handleSelectDocker"></docker-modal>
   </div>
 </template>
 <script>
@@ -91,6 +91,7 @@ function isInRect(rect, event) {
 export default {
   name: "Terminal",
   data() {
+    //terminals: terminals.name terminals.children
     return {
       term: null,
       terminals: [],
@@ -124,7 +125,8 @@ export default {
     DockerModal
   },
   methods: {
-    createTerminal(container, callback, cwd = null) {
+    createTerminal(container, callback, cwd = null, cmd = null) {
+      let that = this;
       let terminalname = "terminal" + uuidv4();
 
       let term = new Terminal({
@@ -159,6 +161,12 @@ export default {
       });
       this.socket.emit("create", { name: terminalname, cwd });
 
+      if (cmd) {
+        setTimeout(function() {
+          that.socket.emit(terminalname + "-input", `${cmd} \r`);
+          that.socket.emit(terminalname + "-input", `clear \r`);
+        }, 1000);
+      }
       this.$nextTick(() => {
         term.open(document.getElementById(terminalname));
         container.children.forEach(item => {
@@ -171,10 +179,11 @@ export default {
           item.rect = item.term.element.getBoundingClientRect();
         });
       });
+
     },
     //增加终端
     handlePlus() {
-      let tab = { name: "tab" + this.terminals.length, children: [] };
+      let tab = { name: "Terminal" + this.terminals.length, children: [] };
       this.createTerminal(tab, () => {
         this.terminals.push(tab);
         this.currentTab = this.terminals.length - 1;
@@ -233,8 +242,8 @@ export default {
         this.socket.emit("remove", name);
       }
     },
+    // 分屏
     handleSplitPane() {
-      // 分屏
       let tab = this.terminals[this.currentTab];
       if (tab.children.length >= 4) {
         this.$message({
@@ -254,10 +263,9 @@ export default {
         this.createTerminal(tab, null, cwd);
       });
     },
-
+    // 新建Tab
     handleCreateTab() {
-      // 新建Tab
-      let tab = { name: "tab0", children: [] };
+      let tab = { name: "Terminal0", children: [] };
       this.createTerminal(tab, () => {
         this.terminals.push(tab);
         this.currentTab = this.terminals.length - 1;
@@ -280,7 +288,6 @@ export default {
     },
 
     handleChangeTheme(val) {
-      console.log(val)
       this.theme = val;
       this.terminals.forEach(tab => {
         tab.children.forEach(pane => {
@@ -294,6 +301,16 @@ export default {
     handleAddDocker() {
       this.dialogDockerVisible = true;
 
+    },
+
+    handleSelectDocker(val) {
+      console.log("parent" ,val)
+      let tab = { name: val.name + this.terminals.length, children: [] };
+      this.createTerminal(tab, () => {
+        this.terminals.push(tab);
+        this.currentTab = this.terminals.length - 1;
+      }, null, `docker exec -it ${val.id} /bin/bash`);
+      console.log("terminal", this.terminals)
     },
 
     close() {
@@ -331,7 +348,7 @@ export default {
   mounted() {
     this.socket = io(window.location.origin + "/terminal", {reconnection: true});
     if (this.terminals.length == 0) {
-      let tab = { name: "tab0", children: [] };
+      let tab = { name: "Terminal0", children: [] };
       this.createTerminal(tab, () => {
         this.terminals.push(tab);
         this.currentTab = this.terminals.length - 1;

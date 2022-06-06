@@ -17,10 +17,6 @@ module.exports = socket => {
         });
         ptyProcess.onData(function(data) {
             if (data.indexOf(option.filtration) == 0) {
-                console.log(data)
-                var tet = '{ "containerId":"d6f9818f8067","containerName":"smartide-web-terminal-smartide-web-terminal-1"}'
-                var b = JSON.parse(tet)
-                console.log("b", b)
                 let arr = data.split(option.filtration)
                 let retArr = new Array();
                 arr.forEach(element => {
@@ -29,12 +25,10 @@ module.exports = socket => {
                         retArr.push(JSON.parse(jsonStr))
                     }
                 });
-                console.log("ret", retArr)
                 socket.emit(option.name + '-docker-output', retArr)
             }
         });
         socket.on(option.name + '-docker-input', data => {
-            console.log("pty", data)
             ptyProcess.write(data)
         });
     });

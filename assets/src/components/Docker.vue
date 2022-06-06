@@ -1,15 +1,23 @@
 <template>
-  <div class="dialog-modal" v-show="visible" @click.self="() => $emit('update:visible', false)">
+  <div class="dialog-modal" v-show="visible">
     <div class="config-container">
       <el-tabs v-model="activeName" @tab-click="handleClick">
         <el-tab-pane label="Docker" name="first">
-          <el-select v-model="dockers" placeholder="请选择Docker" style="width: 100%">
+          <el-select v-model="docker" @change="getContainerName" placeholder="请选择Docker" style="width: 100%">
             <el-option v-for="item in dockers" :key="item.containerId" :label="item.containerName" :value="item.containerId"></el-option>
           </el-select>
-          <div v-if="theme">
+          <div v-if="docker">
+            <p class="title">Docker Name:{{dockerName}}</p>
+            <p class="title">Docker Id:{{docker}}</p>
           </div>
         </el-tab-pane>
+        <!-- <el-tab-pane label="K8S">
+        </el-tab-pane> -->
       </el-tabs>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="() => $emit('update:visible', false)">取 消</el-button>
+        <el-button type="primary" @click="handleNewDockerTerminal">确 定</el-button>
+      </div>
     </div>
   </div>
 </template>
@@ -27,9 +35,8 @@ export default {
     return {
       dockers: null,
       docker: "",
-      activeName: "first",
-      theme: window.localStorage.getItem("themeName") || null,
-      bgimg: window.localStorage.getItem("bgimg") || null
+      dockerName: "",
+      activeName: "first"
     };
   },
 
@@ -43,41 +50,48 @@ export default {
     }
   },
   watch: {
-    theme(val) {
-      window.localStorage.setItem("themeName", val);
-      this.$emit("setTheme", xtermTheme[val]);
-    }
+    // docker(val) {
+    //   console.log(val)
+    //   this.$emit("setDocker", val);
+    // }
   },
   methods: {
+    //获取当前服务器docker列表
     getDockerList() {
-      //docker ps --format "{ \"containerId\":\"{{.ID}}\",\"containerName\":\"{{.Names}}\"}"
-      console.log("获取docker ps");
       let terminalname = "terminal-docker-" + uuidv4();
       let filtration = "filtration" + terminalname;
       let socket = io(window.location.origin + "/terminal", {reconnection: true});
       socket.emit("docker", { name: terminalname, filtration: filtration });
       setTimeout(function() {
         socket.emit(terminalname + "-docker-input", `docker ps --format "${filtration}{ \"containerId\":\"{{.ID}}\",\"containerName\":\"{{.Names}}\" }" \r`);
-        //socket.emit(terminalname + "-docker-input", `echo ] | (docker ps --format '{ "containerId" : "{{.ID}}" , "containerName": "{{.Names}}" }' | paste -sd',' && cat) | (echo ${filtration}[ && cat) \r`);
       },2000);
       socket.on(terminalname + "-docker-output", arrayBuffer => {
-        console.log(arrayBuffer);
         arrayBuffer.forEach(element => {
           if (element) {
             this.dockers.push(element)
           }
         });
+        socket.close();
       });
-      //socket.close();
+      
     },
-    handleUpload(e) {
-      let file = event.target.files[0];
-      var reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = e => {
-        this.bgimg = e.target.result;
-        window.localStorage.setItem("bgimg", e.target.result);
-      };
+    //value的是是:value的值
+    getContainerName(value) {
+      this.dockers.forEach(item => {
+        if(item.containerId == value){
+          this.dockerName = item.containerName;
+        }
+      })
+    },
+    //增加docker terminal
+    handleNewDockerTerminal(e) {
+      if (this.docker) {
+        var obj = {};
+        obj.id = this.docker;
+        obj.name = this.dockerName;
+        this.$emit("selectedDocker", obj);
+        this.$emit('update:visible', false);
+      }
     }
   },
   mounted() {
@@ -138,40 +152,13 @@ export default {
     font-size: 14px;
   }
 
-  .theme-colors {
-    font-size: 12px;
-
-    .show-color {
-      width: 100%;
-      height: 24px;
-      margin-bottom: 10px;
-    }
-
-    .el-col {
-      text-align: center;
-    }
-  }
-
-  .bgimg-btn {
-    width: 600px;
-    height: 300px;
-
-    img {
-      width: 100%;
-      height: 100%;
-    }
+  .dialog-footer {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 100%;
+    text-align: right;
   }
 }
 
-.upload-input {
-  z-index: 100000;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  font-size: 0;
-  opacity: 0;
-}
 </style>
