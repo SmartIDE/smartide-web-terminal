@@ -9,7 +9,7 @@
     <div class="header">
       <span>Terminal</span>
       <ul class="menu-list">
-        <li class="active">
+        <li class="menu-item active">
           <select
             class="terminal-select"
             v-model="currentTab"
@@ -18,9 +18,20 @@
             <option :value="index" v-for="(item, index) in terminals" :key="index">{{ item.name }}</option>
           </select>
         </li>
-        <li class="el-icon-search" @click="dialogDockerVisible = true"></li>
-        <li class="el-icon-plus" @click="handlePlus"></li>
-        <li class="el-icon-delete" @click="handleDelete"></li>
+        <!-- <li class="menu-item el-icon-plus" @click="dialogDockerVisible = true"></li> -->
+        <li class="menu-item">
+            <el-dropdown @command="handlePlusCommand">
+              <i class="el-icon-plus menu-icon dropicon"></i>
+              <el-dropdown-menu slot="dropdown" class="dropmenu">
+                <el-dropdown-item class="dropmenu-item" command="terminal">Terminal</el-dropdown-item>
+                <el-dropdown-item class="dropmenu-item" command="docker">Docker</el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+        </li>
+        <!-- <li class="menu-item el-icon-delete" @click="handleDelete"></li> -->
+        <li class="menu-item">
+          <el-button type="text" @click="handleDelConfirm"><i class="el-icon-delete menu-icon"></i></el-button>
+        </li>
       </ul>
     </div>
     <div id="xterm-wrapper">
@@ -298,21 +309,42 @@ export default {
       window.localStorage.setItem("theme", JSON.stringify(val));
     },
 
-    handleAddDocker() {
-      this.dialogDockerVisible = true;
-
-    },
-
     handleSelectDocker(val) {
       console.log("parent" ,val)
-      let tab = { name: val.name + this.terminals.length, children: [] };
-      this.createTerminal(tab, () => {
-        this.terminals.push(tab);
-        this.currentTab = this.terminals.length - 1;
-      }, null, `docker exec -it ${val.id} /bin/bash`);
+      if (val.type === "docker") {      
+        let tab = { name: val.name + this.terminals.length, children: [] };
+        this.createTerminal(tab, () => {
+          this.terminals.push(tab);
+          this.currentTab = this.terminals.length - 1;
+        }, null, `docker exec -it ${val.id} /bin/bash`);
+      } else {
+        this.handlePlus();
+      }
       console.log("terminal", this.terminals)
     },
 
+    handlePlusCommand(command) {
+      if (command === "docker") {
+        this.dialogDockerVisible = true;
+      } else {
+        this.handlePlus();
+      }
+    },
+    handleDelConfirm() {
+        this.$confirm('此操作将永久删除当前Terminal, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.handleDelete();
+          // this.$message({
+          //   type: 'success',
+          //   message: '删除成功!'
+          // });
+        }).catch(() => {
+      
+        });
+      },
     close() {
       if (this.terminals.length > 0) {
         this.terminals.forEach(tab => {
@@ -368,6 +400,28 @@ export default {
   padding: 0;
 }
 
+.menu-icon {
+  color: #fff;
+}
+.dropicon {
+  color: #fff;
+}
+.dropmenu {
+  border: 0;
+  .dropmenu-item {
+    line-height: 1.5;
+    color: #333;
+  }
+  .dropmenu-item:hover {
+    color: #fff;
+    background-color: #46a0fc;
+  }
+  li {
+    background-color: #c0c4cc;
+    text-align: center;
+    padding: 5px 14px;
+  }
+}
 #terminal {
   position: fixed;
   bottom: 0;
@@ -399,7 +453,7 @@ export default {
       list-style: none;
       float: right;
       height: 40px;
-      li {
+      .menu-item  {
         padding: 0 10px;
         line-height: 40px;
         cursor: pointer;

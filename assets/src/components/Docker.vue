@@ -2,8 +2,10 @@
   <div class="dialog-modal" v-show="visible">
     <div class="config-container">
       <el-tabs v-model="activeName" @tab-click="handleClick">
-        <el-tab-pane label="Docker" name="first">
-          <el-select v-model="docker" @change="getContainerName" placeholder="请选择Docker" style="width: 100%">
+        <!-- <el-tab-pane label="Terminal" name="terminal">
+        </el-tab-pane> -->
+        <el-tab-pane label="Docker" name="docker">
+          <el-select v-model="docker" @change="getContainerName" placeholder="请选择Docker" style="width: 100%" :popper-append-to-body="false">
             <el-option v-for="item in dockers" :key="item.containerId" :label="item.containerName" :value="item.containerId"></el-option>
           </el-select>
           <div v-if="docker">
@@ -16,7 +18,7 @@
       </el-tabs>
       <div slot="footer" class="dialog-footer">
         <el-button @click="() => $emit('update:visible', false)">取 消</el-button>
-        <el-button type="primary" @click="handleNewDockerTerminal">确 定</el-button>
+        <el-button type="primary" @click="handleNewTerminal">确 定</el-button>
       </div>
     </div>
   </div>
@@ -36,7 +38,7 @@ export default {
       dockers: null,
       docker: "",
       dockerName: "",
-      activeName: "first"
+      activeName: "docker"
     };
   },
 
@@ -82,17 +84,23 @@ export default {
           this.dockerName = item.containerName;
         }
       })
-    },
+    }, 
+    // handleClick(tab, event) {
+    //   console.log(this.activeName)
+    //   console.log(tab, event);
+    // },
     //增加docker terminal
-    handleNewDockerTerminal(e) {
-      if (this.docker) {
+    handleNewTerminal(e) {
+      if (this.activeName) {
         var obj = {};
         obj.id = this.docker;
         obj.name = this.dockerName;
+        obj.type = this.activeName;
         this.$emit("selectedDocker", obj);
         this.$emit('update:visible', false);
       }
-    }
+    },
+
   },
   mounted() {
     if (!this.dockers) {
