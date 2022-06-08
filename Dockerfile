@@ -17,7 +17,7 @@ RUN echo \
   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 RUN apt-get update && apt-get install -y docker-ce-cli
 #复制terminal文件
-COPY ../ webterminal/
+COPY ./ webterminal/
 
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
