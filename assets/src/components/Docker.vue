@@ -1,16 +1,23 @@
 <template>
-  <div class="dialog-modal" v-show="visible">
+  <div class="dialog-modal" v-show="visible" @click.self="() => $emit('update:visible', false)">
     <div class="config-container">
       <el-tabs v-model="activeName" @tab-click="handleClick">
         <!-- <el-tab-pane label="Terminal" name="terminal">
         </el-tab-pane> -->
         <el-tab-pane label="Docker" name="docker">
           <el-select v-model="docker" @change="getContainerName" placeholder="请选择Docker" style="width: 100%" :popper-append-to-body="false">
-            <el-option v-for="item in dockers" :key="item.containerId" :label="item.containerName" :value="item.containerId"></el-option>
+            <el-option v-for="item in dockers" :key="item.containerId" :label="`${item.containerName}(${item.containerId})`" :value="item.containerId"></el-option>
           </el-select>
           <div v-if="docker">
-            <p class="title">Docker Name:{{dockerName}}</p>
-            <p class="title">Docker Id:{{docker}}</p>
+            <el-switch v-model="value3" inline-prompt active-text="是" inactive-text="否" />
+            <!-- <p class="title">
+              <el-tag class="mx-1" effect="plain">Docker Name:</el-tag>
+              <el-tag class="mx-1" effect="dark">{{dockerName}}</el-tag>
+            </p>
+            <p class="title">
+              <el-tag class="mx-1" effect="plain">Docker Id:</el-tag>
+              <el-tag class="mx-1" effect="dark">{{docker}}</el-tag>
+            </p> -->
           </div>
         </el-tab-pane>
         <!-- <el-tab-pane label="K8S">
@@ -38,7 +45,8 @@ export default {
       dockers: null,
       docker: "",
       dockerName: "",
-      activeName: "docker"
+      activeName: "docker",
+      value3: true
     };
   },
 
