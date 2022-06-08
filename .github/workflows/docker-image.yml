@@ -1,12 +1,9 @@
 name: Docker Image CI
 
-variables:
-- name: ImageTag
-  value: $(Build.BuildId)
-- name: ImageName
-  value: "smartide-opvscode"
+env:
+  DAY_OF_WEEK: Monday
 
-  on:
+on:
   push:
     branches: [ "master" ]
   pull_request:
