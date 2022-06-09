@@ -22,6 +22,7 @@ jobs:
         node-version: '14'
     - run: |
         echo $(date +%s)
+        echo $GITHUB_RUN_ID
         npm run build
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag smartide-webterminal:latest
@@ -29,7 +30,7 @@ jobs:
       env:
         aliyunlogin: ${{ secrets.ALIYUNLOGIN }}
         aliyunpassword: ${{ secrets.ALIYUNPASSWORD }}
-        imagetag: $GITHUB_RUN_ID
+        imagetag: latest
       run:  |
         docker login -u $aliyunlogin -p $aliyunpassword registry.cn-hangzhou.aliyuncs.com
         docker tag smartide-webterminal:latest registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal:$imagetag        

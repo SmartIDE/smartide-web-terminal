@@ -9,19 +9,14 @@
             <el-option v-for="item in dockers" :key="item.containerId" :label="`${item.containerName}(${item.containerId})`" :value="item.containerId"></el-option>
           </el-select>
           <div v-if="docker">
-            <el-switch v-model="value3" inline-prompt active-text="是" inactive-text="否" />
-            <!-- <p class="title">
-              <el-tag class="mx-1" effect="plain">Docker Name:</el-tag>
-              <el-tag class="mx-1" effect="dark">{{dockerName}}</el-tag>
+            <p class="title">
+              是否总是使用root用户
             </p>
             <p class="title">
-              <el-tag class="mx-1" effect="plain">Docker Id:</el-tag>
-              <el-tag class="mx-1" effect="dark">{{docker}}</el-tag>
-            </p> -->
+              <el-switch v-model="isRootUser" />
+            </p>
           </div>
         </el-tab-pane>
-        <!-- <el-tab-pane label="K8S">
-        </el-tab-pane> -->
       </el-tabs>
       <div slot="footer" class="dialog-footer">
         <el-button @click="() => $emit('update:visible', false)">取 消</el-button>
@@ -42,11 +37,12 @@ export default {
   },
   data() {
     return {
+      currentUser: "root",
       dockers: null,
       docker: "",
       dockerName: "",
       activeName: "docker",
-      value3: true
+      isRootUser: false
     };
   },
 
@@ -142,8 +138,8 @@ export default {
 .config-container {
   position: relative;
   display: inline-block;
-  min-width: 640px;
-  min-height: 380px;
+  min-width: 360px;
+  min-height: 300px;
   padding: 10px 10px 20px;
   vertical-align: middle;
   background-color: #fff;
