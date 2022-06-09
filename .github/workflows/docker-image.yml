@@ -20,6 +20,8 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: '14'
-    - run: npm run build
+    - run: npm install
+    - shell: bash
+      run: cd assets && npm install && npm start
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag smartide-webterminal:111
