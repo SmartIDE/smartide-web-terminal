@@ -1,7 +1,7 @@
 name: Docker Image CI
 
 env:
-  DAY_OF_WEEK: Monday
+  ImageTag: 222
 
 on:
   push:
@@ -22,4 +22,11 @@ jobs:
         node-version: '14'
     - run: npm run build
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag smartide-webterminal:111
+      run: docker build . --file Dockerfile --tag registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal:$ImageTag
+    - name: Upload Aliyun
+      env:
+        aliyunlogin: ${{ secrets.ALIYUNLOGIN }}
+        aliyunpassword: ${{ secrets.ALIYUNPASSWORD }}
+      run:  |
+        docker login -u $aliyunlogin -p $aliyunpassword registry.cn-hangzhou.aliyuncs.com
+        docker push registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal:$ImageTag
