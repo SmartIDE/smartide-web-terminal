@@ -1,7 +1,7 @@
 name: Docker Image CI
 
 env:
-  ImageTag: $GITHUB_RUN_ID
+  ImageTag: 333
 
 on:
   push:
@@ -20,7 +20,9 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: '14'
-    - run: npm run build
+    - run: |
+        echo $GITHUB_RUN_ID
+        npm run build
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal:$ImageTag
     - name: Upload Aliyun
