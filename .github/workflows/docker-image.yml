@@ -1,7 +1,7 @@
 name: Docker Image CI
 
 env:
-  ImageTag: 222
+  ImageTag: $GITHUB_RUN_ID
 
 on:
   push:
