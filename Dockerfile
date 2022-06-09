@@ -24,6 +24,7 @@ ENV LANG=C.UTF-8 \
     EDITOR=code \
     VISUAL=code \
     GIT_EDITOR="code --wait" \
+    TERMINAL_USER="root" \
     OPENVSCODE_SERVER_ROOT=/home/opvscode
 
 COPY smartide_web_terminal.sh /idesh/smartide_web_terminal.sh
