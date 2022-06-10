@@ -1,4 +1,4 @@
-# web terminal
+#smartide webterminal
 
 ![GitHub Logo](webshell.gif)
 
