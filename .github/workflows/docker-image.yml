@@ -31,7 +31,7 @@ jobs:
         aliyunlogin: ${{ secrets.ALIYUNLOGIN }}
         aliyunpassword: ${{ secrets.ALIYUNPASSWORD }}
         aliyundockername: "registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal"
-        imagetag1: ${{ GITHUB_RUN_ID }}
+        imagetag1: $GITHUB_RUN_ID
       run:  |
         docker login -u $aliyunlogin -p $aliyunpassword registry.cn-hangzhou.aliyuncs.com
         docker tag smartide-webterminal:latest registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal:latest
