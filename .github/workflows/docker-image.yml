@@ -20,7 +20,8 @@ jobs:
       with:
         node-version: '14'
     - run: |
-        echo imagetag
+        echo $imagetag
+        echo $(imagetag)
         echo $(date +%s)
         echo $GITHUB_RUN_ID
         npm run build
@@ -33,10 +34,10 @@ jobs:
         aliyundockername: "registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal"
       run:  |
         docker login -u $aliyunlogin -p $aliyunpassword registry.cn-hangzhou.aliyuncs.com
-        docker tag smartide-webterminal:latest $aliyundockername:latest
-        docker tag smartide-webterminal:latest $aliyundockername:$imagetag
-        docker push $aliyundockername:latest
-        docker push $aliyundockername:$imagetag
+        docker tag smartide-webterminal:latest $(aliyundockername):latest
+        docker tag smartide-webterminal:latest $(aliyundockername):$(imagetag)
+        docker push $(aliyundockername):latest
+        docker push $(aliyundockername):$(imagetag)
     - name: Upload DockerHub
       env:
         dockerhublogin: ${{ secrets.DOCKERHUBLOGIN }}
@@ -44,7 +45,7 @@ jobs:
         dockerhubname: "goowenbo/se-webterminal"
       run: |
         docker login -u $dockerhublogin -p $dockerhubpassword
-        docker tag smartide-webterminal:latest $dockerhubname:latest
-        docker tag smartide-webterminal:latest $dockerhubname:$imagetag
-        docker push $dockerhubname:latest
-        docker push $dockerhubname:$imagetag
+        docker tag smartide-webterminal:latest $(dockerhubname):latest
+        docker tag smartide-webterminal:latest $(dockerhubname):$(imagetag)
+        docker push $(dockerhubname):latest
+        docker push $(dockerhubname):$(imagetag)
