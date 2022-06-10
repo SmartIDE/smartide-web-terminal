@@ -31,7 +31,7 @@ npm start
 ```js
 npm run build
 
-// 默认端口：3000
+// 默认端口：6860
 node ./bin/webshell
 
 //修改端口
