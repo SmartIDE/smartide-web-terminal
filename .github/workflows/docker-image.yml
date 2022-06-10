@@ -1,7 +1,7 @@
 name: Docker Image CI
 
 env:
-  imagetag: $(date +%s)
+  imagetag: $GITHUB_RUN_ID
 on:
   push:
     branches: [ "master" ]
