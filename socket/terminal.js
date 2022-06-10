@@ -28,6 +28,8 @@ module.exports = socket => {
                 socket.emit(option.name + '-docker-output', retArr)
             }
         });
+        let username = os.userInfo().username;
+        socket.emit(option.name + '-docker-username', username);
         socket.on(option.name + '-docker-input', data => {
             ptyProcess.write(data)
         });

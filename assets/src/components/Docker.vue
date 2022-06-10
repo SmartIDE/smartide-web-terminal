@@ -6,9 +6,9 @@
         </el-tab-pane> -->
         <el-tab-pane label="Docker" name="docker">
           <el-select v-model="docker" @change="getContainerName" placeholder="请选择Docker" style="width: 100%" :popper-append-to-body="false">
-            <el-option v-for="item in dockers" :key="item.containerId" :label="`${item.containerName}(${item.containerId})`" :value="item.containerId"></el-option>
+            <el-option v-for="item in dockers" :key="item.containerId" :label="`${currentUser}@${item.containerName}(${item.containerId})`" :value="item.containerId"></el-option>
           </el-select>
-          <div v-if="docker">
+          <div v-if="currentUser != 'root'">
             <p class="title">
               是否总是使用root用户
             </p>
@@ -27,8 +27,8 @@
 </template>
 
 <script>
-import io from "socket.io-client";
-import uuidv4 from "uuid/v4";
+import io from 'socket.io-client';
+import uuidv4 from 'uuid/v4';
 
 export default {
   name: "DockerModal",
@@ -77,9 +77,15 @@ export default {
             this.dockers.push(element)
           }
         });
-        socket.close();
       });
-      
+      socket.on(terminalname + "-docker-username", username => {
+        if (username) {
+          this.currentUser = username
+        }
+      });
+      setTimeout(function() {
+        socket.close();
+      }, 10000);
     },
     //value的是是:value的值
     getContainerName(value) {
@@ -100,6 +106,7 @@ export default {
         obj.id = this.docker;
         obj.name = this.dockerName;
         obj.type = this.activeName;
+        obj.user = this.currentUser;
         this.$emit("selectedDocker", obj);
         this.$emit('update:visible', false);
       }

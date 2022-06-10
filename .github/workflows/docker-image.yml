@@ -28,10 +28,10 @@ jobs:
         aliyundockername: registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal
       run:  |
         docker login -u $aliyunlogin -p $aliyunpassword registry.cn-hangzhou.aliyuncs.com
-        docker tag smartide-webterminal:latest $aliyundockername:latest
         docker tag smartide-webterminal:latest $aliyundockername:$GITHUB_RUN_ID
-        docker push $aliyundockername:latest
+        docker tag smartide-webterminal:latest $aliyundockername:latest
         docker push $aliyundockername:$GITHUB_RUN_ID
+        docker push $aliyundockername:latest
     - name: Upload DockerHub
       env:
         dockerhublogin: ${{ secrets.DOCKERHUBLOGIN }}
@@ -39,7 +39,7 @@ jobs:
         dockerhubname: goowenbo/se-webterminal
       run: |
         docker login -u $dockerhublogin -p $dockerhubpassword
-        docker tag smartide-webterminal:latest $dockerhubname:latest
         docker tag smartide-webterminal:latest $dockerhubname:$GITHUB_RUN_ID
-        docker push $dockerhubname:latest
+        docker tag smartide-webterminal:latest $dockerhubname:latest
         docker push $dockerhubname:$GITHUB_RUN_ID
+        docker push $dockerhubname:latest

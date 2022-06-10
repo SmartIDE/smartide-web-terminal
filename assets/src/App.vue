@@ -316,7 +316,7 @@ export default {
         this.createTerminal(tab, () => {
           this.terminals.push(tab);
           this.currentTab = this.terminals.length - 1;
-        }, null, `docker exec -it ${val.id} /bin/bash`);
+        }, null, `docker exec -it --user ${val.user} ${val.id} /bin/bash`);
       } else {
         this.handlePlus();
       }
