@@ -106,7 +106,7 @@ export default {
         obj.id = this.docker;
         obj.name = this.dockerName;
         obj.type = this.activeName;
-        obj.user = this.currentUser;
+        obj.user = this.isRootUser ? 'root' : this.currentUser;
         this.$emit("selectedDocker", obj);
         this.$emit('update:visible', false);
       }

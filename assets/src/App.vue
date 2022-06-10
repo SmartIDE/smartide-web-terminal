@@ -312,7 +312,7 @@ export default {
     handleSelectDocker(val) {
       console.log("parent" ,val)
       if (val.type === "docker") {      
-        let tab = { name: val.name + this.terminals.length, children: [] };
+        let tab = { name: `${val.user}@${val.name}-${this.terminals.length}`, children: [] };
         this.createTerminal(tab, () => {
           this.terminals.push(tab);
           this.currentTab = this.terminals.length - 1;
@@ -461,7 +461,7 @@ export default {
       }
     }
     .terminal-select {
-      width: 120px;
+      width: 360px;
       margin-right: 5px;
     }
     .el-icon-plus,

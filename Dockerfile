@@ -19,6 +19,11 @@ RUN apt-get update && apt-get install -y docker-ce-cli
 #复制terminal文件
 COPY ./ webterminal/
 
+#清理无用文件
+WORKDIR /home/webterminal
+RUN rm -rf .eslintignore .eslintrc.js .git .github .gitignore .ide .npmignore .npmrc \
+    Dockerfile LICENSE README.md assets package.json package-lock.json smartide_web_terminal.sh views webshell.gif
+
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     EDITOR=code \
