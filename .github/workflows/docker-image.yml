@@ -1,7 +1,7 @@
 name: Docker Image CI
 
 env:
-  imagetag: $GITHUB_RUN_ID
+  imagetag: ${{GITHUB_RUN_ID}}
 on:
   push:
     branches: [ "master" ]
