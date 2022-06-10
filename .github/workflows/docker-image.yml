@@ -1,7 +1,5 @@
 name: Docker Image CI
 
-env:
-  imagetag: $GITHUB_RUN_ID
 on:
   push:
     branches: [ "master" ]
@@ -20,7 +18,6 @@ jobs:
       with:
         node-version: '14'
     - run: |
-        echo $imagetag
         echo $(date +%s)
         echo $GITHUB_RUN_ID
         npm run build
@@ -30,14 +27,13 @@ jobs:
       env:
         aliyunlogin: ${{ secrets.ALIYUNLOGIN }}
         aliyunpassword: ${{ secrets.ALIYUNPASSWORD }}
-        aliyundockername: "registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal"
-        imagetag1: $GITHUB_RUN_ID
+        aliyundockername: registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webtermina2l1
       run:  |
         docker login -u $aliyunlogin -p $aliyunpassword registry.cn-hangzhou.aliyuncs.com
-        docker tag smartide-webterminal:latest registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal:latest
-        docker tag smartide-webterminal:latest registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal:$GITHUB_RUN_ID
-        docker push registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal:latest
-        docker push registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal:$GITHUB_RUN_ID
+        docker tag smartide-webterminal:latest $aliyundockername:latest
+        docker tag smartide-webterminal:latest $aliyundockername:$GITHUB_RUN_ID
+        docker push $aliyundockername:latest
+        docker push $aliyundockername:$GITHUB_RUN_ID
     - name: Upload DockerHub
       env:
         dockerhublogin: ${{ secrets.DOCKERHUBLOGIN }}
