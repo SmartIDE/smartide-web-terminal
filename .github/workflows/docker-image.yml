@@ -34,7 +34,9 @@ jobs:
       run:  |
         docker login -u $aliyunlogin -p $aliyunpassword registry.cn-hangzhou.aliyuncs.com
         docker tag smartide-webterminal:latest registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal:latest
+        docker tag smartide-webterminal:latest registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal:$imagetag
         docker push registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal:latest
+        docker push registry.cn-hangzhou.aliyuncs.com/smartide/smartide-webterminal:$imagetag
     - name: Upload DockerHub
       env:
         dockerhublogin: ${{ secrets.DOCKERHUBLOGIN }}
