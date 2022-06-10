@@ -1,5 +1,5 @@
 #smartide webterminal
-
+up222
 ![GitHub Logo](webshell.gif)
 
 ## 功能
@@ -40,3 +40,4 @@ node ./bin/webshell --port 3001
 //如果使用pm2
 pm2 start ./bin/webshell -- --port 3001
 ```
+test
