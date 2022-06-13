@@ -2,18 +2,13 @@
   <div class="dialog-modal" v-show="visible" @click.self="() => $emit('update:visible', false)">
     <div class="config-container">
       <el-tabs v-model="activeName" @tab-click="handleClick">
-        <!-- <el-tab-pane label="Terminal" name="terminal">
-        </el-tab-pane> -->
         <el-tab-pane label="Docker" name="docker">
           <el-select v-model="docker" @change="getContainerName" placeholder="请选择Docker" style="width: 100%" :popper-append-to-body="false">
             <el-option v-for="item in dockers" :key="item.containerId" :label="`${currentUser}@${item.containerName}(${item.containerId})`" :value="item.containerId"></el-option>
           </el-select>
           <div v-if="currentUser != 'root'">
             <p class="title">
-              是否总是使用root用户
-            </p>
-            <p class="title">
-              <el-switch v-model="isRootUser" />
+              是否总是使用root用户<el-switch style="    margin-left: 10px;" v-model="isRootUser" />
             </p>
           </div>
         </el-tab-pane>
@@ -146,7 +141,7 @@ export default {
   position: relative;
   display: inline-block;
   min-width: 360px;
-  min-height: 300px;
+  min-height: 200px;
   padding: 10px 10px 20px;
   vertical-align: middle;
   background-color: #fff;
