@@ -64,7 +64,7 @@ export default {
       let socket = io(window.location.origin + "/terminal", {reconnection: true});
       socket.emit("docker", { name: terminalname, filtration: filtration });
       setTimeout(function() {
-        socket.emit(terminalname + "-docker-input", `docker ps --format "${filtration}{ \"containerId\":\"{{.ID}}\",\"containerName\":\"{{.Names}}\" }" \r`);
+        socket.emit(terminalname + "-docker-input", `sudo docker ps --format "${filtration}{ \"containerId\":\"{{.ID}}\",\"containerName\":\"{{.Names}}\" }" \r`);
       },2000);
       socket.on(terminalname + "-docker-output", arrayBuffer => {
         arrayBuffer.forEach(element => {
