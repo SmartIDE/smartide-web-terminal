@@ -42,7 +42,6 @@ module.exports = socket => {
             cwd: option.cwd || userhome,
             env: process.env
         });
-        // ptyProcess.on('data', data => socket.emit(option.name + '-output', data));
 
         ptyProcess.onData(function(data) {
             //docker exec用户不存在时

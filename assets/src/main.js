@@ -1,10 +1,7 @@
 import Vue from 'vue';
 import contentmenu from 'v-contextmenu'
 import 'v-contextmenu/dist/index.css'
-
 import ElementUI from 'element-ui'
-//import { Row, Col, Message, Dropdown, Select, Option, Tabs, TabPane, Icon, Button, Upload } from 'element-ui';
-
 import App from './App.vue';
  
 Vue.use(contentmenu);

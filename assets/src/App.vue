@@ -347,10 +347,6 @@ export default {
           type: 'warning'
         }).then(() => {
           this.handleDelete();
-          // this.$message({
-          //   type: 'success',
-          //   message: '删除成功!'
-          // });
         }).catch(() => {
       
         });
