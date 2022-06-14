@@ -42,7 +42,18 @@ module.exports = socket => {
             cwd: option.cwd || userhome,
             env: process.env
         });
-        ptyProcess.on('data', data => socket.emit(option.name + '-output', data));
+        // ptyProcess.on('data', data => socket.emit(option.name + '-output', data));
+
+        ptyProcess.onData(function(data) {
+            //docker exec用户不存在时
+            if (data == `unable to find user ${option.user}: no matching entries in passwd file\r\n`) {                
+                socket.emit(option.name + '-createfail', data);
+            } else {
+                socket.emit(option.name + '-output', data);
+            }
+        });
+
+
         socket.on(option.name + '-input', data => ptyProcess.write(data));
         socket.on(option.name + '-resize', size => {
             ptyProcess.resize(size[0], size[1]);

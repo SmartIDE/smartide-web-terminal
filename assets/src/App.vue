@@ -18,7 +18,6 @@
             <option :value="index" v-for="(item, index) in terminals" :key="index">{{ item.name }}</option>
           </select>
         </li>
-        <!-- <li class="menu-item el-icon-plus" @click="dialogDockerVisible = true"></li> -->
         <li class="menu-item">
             <el-dropdown @command="handlePlusCommand">
               <i class="el-icon-plus menu-icon dropicon"></i>
@@ -28,7 +27,6 @@
               </el-dropdown-menu>
             </el-dropdown>
         </li>
-        <!-- <li class="menu-item el-icon-delete" @click="handleDelete"></li> -->
         <li class="menu-item">
           <el-button type="text" @click="handleDelConfirm"><i class="el-icon-delete menu-icon"></i></el-button>
         </li>
@@ -102,12 +100,15 @@ function isInRect(rect, event) {
 export default {
   name: "Terminal",
   data() {
-    //terminals: terminals.name terminals.children
     return {
       term: null,
       terminals: [],
       socket: null,
       currentTab: 0,
+      currentDocker: {
+        user: "",
+        name: "",
+      },
       dialogVisible: false,
       dialogDockerVisible: false,
       theme: window.localStorage.getItem("theme")
@@ -152,17 +153,26 @@ export default {
 
       callback && callback();
 
-      term.on("resize", size => {
-        this.socket.emit(terminalname + "-resize", [size.cols, size.rows]);
+      term.onResize(function(size) {
+        that.socket.emit(terminalname + "-resize", [size.cols, size.rows]);
       });
-      term.on("data", data => {
-        this.socket.emit(terminalname + "-input", data);
+      term.onData(function(data) {
+        that.socket.emit(terminalname + "-input", data);
       });
 
       this.socket.on(terminalname + "-output", arrayBuffer => {
         term.write(arrayBuffer);
       });
 
+      this.socket.on(terminalname + "-createfail", arrayBuffer => {
+        this.handleDelete();
+        this.$message.error({
+          showClose: true,
+          type: "error",
+          message: `${this.currentDocker.user}@${this.currentDocker.name}连接异常`,
+          duration: 5000
+        });
+      });
       this.socket.on(terminalname + "-pid", pid => {
         pane.pid = pid;
       });
@@ -170,13 +180,11 @@ export default {
       window.addEventListener("resize", () => {
         term.fit();
       });
-      this.socket.emit("create", { name: terminalname, cwd });
+      this.socket.emit("create", { name: terminalname, cwd, user: this.currentDocker.user });
 
       if (cmd) {
-        setTimeout(function() {
-          that.socket.emit(terminalname + "-input", `${cmd} \r`);
-          that.socket.emit(terminalname + "-input", `clear \r`);
-        }, 1000);
+        that.socket.emit(terminalname + "-input", ` ${cmd} \r`);
+        that.socket.emit(terminalname + "-input", ` clear \r`);
       }
       this.$nextTick(() => {
         term.open(document.getElementById(terminalname));
@@ -194,7 +202,7 @@ export default {
     },
     //增加终端
     handlePlus() {
-      let tab = { name: "Terminal" + this.terminals.length, children: [] };
+      let tab = { name: "terminal" + this.terminals.length, classify: "default", children: [] };
       this.createTerminal(tab, () => {
         this.terminals.push(tab);
         this.currentTab = this.terminals.length - 1;
@@ -276,7 +284,7 @@ export default {
     },
     // 新建Tab
     handleCreateTab() {
-      let tab = { name: "Terminal0", children: [] };
+      let tab = { name: "terminal0", classify: "default", children: [] };
       this.createTerminal(tab, () => {
         this.terminals.push(tab);
         this.currentTab = this.terminals.length - 1;
@@ -308,21 +316,23 @@ export default {
 
       window.localStorage.setItem("theme", JSON.stringify(val));
     },
-
+    // 创建docker terminal
     handleSelectDocker(val) {
       console.log("parent" ,val)
-      if (val.type === "docker") {      
-        let tab = { name: `${val.user}@${val.name}-${this.terminals.length}`, children: [] };
+      if (val.type === "docker") {
+        this.currentDocker.user = val.user;
+        this.currentDocker.name = val.name;
+        let tab = { name: `${val.user}@${val.name}-${this.terminals.length}`, classify: `docker-${val.name}`, children: [] };
         this.createTerminal(tab, () => {
           this.terminals.push(tab);
           this.currentTab = this.terminals.length - 1;
-        }, null, `sudo docker exec -it --user ${val.user} ${val.id} /bin/bash`);
+        }, null, `sudo docker exec -it --user ${val.user} ${val.id} /bin/bash`);        
       } else {
         this.handlePlus();
       }
       console.log("terminal", this.terminals)
     },
-
+    //增加terminal
     handlePlusCommand(command) {
       if (command === "docker") {
         this.dialogDockerVisible = true;
@@ -380,7 +390,7 @@ export default {
   mounted() {
     this.socket = io(window.location.origin + "/terminal", {reconnection: true});
     if (this.terminals.length == 0) {
-      let tab = { name: "Terminal0", children: [] };
+      let tab = { name: "terminal0", classify: "default", children: [] };
       this.createTerminal(tab, () => {
         this.terminals.push(tab);
         this.currentTab = this.terminals.length - 1;

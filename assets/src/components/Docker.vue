@@ -1,20 +1,21 @@
 <template>
-  <div class="dialog-modal" v-show="visible" @click.self="() => $emit('update:visible', false)">
+  <div class="dialog-modal" v-show="visible" @click.self="handleCancel">
     <div class="config-container">
       <el-tabs v-model="activeName" @tab-click="handleClick">
         <el-tab-pane label="Docker" name="docker">
-          <el-select v-model="docker" @change="getContainerName" placeholder="请选择Docker" style="width: 100%" :popper-append-to-body="false">
+          <el-select v-model="docker" @change="getContainerName" placeholder="请选择Docker" style="width: 280px" :popper-append-to-body="false">
             <el-option v-for="item in dockers" :key="item.containerId" :label="`${currentUser}@${item.containerName}(${item.containerId})`" :value="item.containerId"></el-option>
           </el-select>
+          <el-button icon="el-icon-refresh" plain :loading="refreshActive" @click="getDockerList(true)"></el-button>
           <div v-if="currentUser != 'root'">
             <p class="title">
-              是否总是使用root用户<el-switch style="    margin-left: 10px;" v-model="isRootUser" />
+              总是使用root用户<el-switch style="    margin-left: 10px;" v-model="isRootUser" />
             </p>
           </div>
         </el-tab-pane>
       </el-tabs>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="() => $emit('update:visible', false)">取 消</el-button>
+        <el-button @click="handleCancel">取 消</el-button>
         <el-button type="primary" @click="handleNewTerminal">确 定</el-button>
       </div>
     </div>
@@ -37,41 +38,38 @@ export default {
       docker: "",
       dockerName: "",
       activeName: "docker",
-      isRootUser: false
+      isRootUser: false,
+      refreshActive: false
     };
   },
 
   computed: {
-    colors() {
-      if (this.theme) {
-        return xtermTheme[this.theme];
-      } else {
-        return null;
-      }
-    }
+
   },
   watch: {
-    // docker(val) {
-    //   console.log(val)
-    //   this.$emit("setDocker", val);
-    // }
+
   },
   methods: {
     //获取当前服务器docker列表
-    getDockerList() {
+    getDockerList(isClear = false) {
+      if (isClear) {
+        this.refreshActive = true;
+        this.docker = "";
+        this.dockerName = "";
+        this.dockers = new Array();
+      }
       let terminalname = "terminal-docker-" + uuidv4();
       let filtration = "filtration" + terminalname;
       let socket = io(window.location.origin + "/terminal", {reconnection: true});
       socket.emit("docker", { name: terminalname, filtration: filtration });
-      setTimeout(function() {
-        socket.emit(terminalname + "-docker-input", `sudo docker ps --format "${filtration}{ \"containerId\":\"{{.ID}}\",\"containerName\":\"{{.Names}}\" }" \r`);
-      },2000);
+      socket.emit(terminalname + "-docker-input", ` sudo docker ps --format "${filtration}{ \"containerId\":\"{{.ID}}\",\"containerName\":\"{{.Names}}\" }" \r`);
       socket.on(terminalname + "-docker-output", arrayBuffer => {
         arrayBuffer.forEach(element => {
           if (element) {
             this.dockers.push(element)
           }
         });
+        this.refreshActive = false;
       });
       socket.on(terminalname + "-docker-username", username => {
         if (username) {
@@ -80,7 +78,7 @@ export default {
       });
       setTimeout(function() {
         socket.close();
-      }, 10000);
+      }, 5000);
     },
     //value的是是:value的值
     getContainerName(value) {
@@ -90,10 +88,6 @@ export default {
         }
       })
     }, 
-    // handleClick(tab, event) {
-    //   console.log(this.activeName)
-    //   console.log(tab, event);
-    // },
     //增加docker terminal
     handleNewTerminal(e) {
       if (this.activeName) {
@@ -103,14 +97,22 @@ export default {
         obj.type = this.activeName;
         obj.user = this.isRootUser ? 'root' : this.currentUser;
         this.$emit("selectedDocker", obj);
-        this.$emit('update:visible', false);
+        this.$emit('update:visible', false);   
+        this.docker = "";
+        this.dockerName = "";
+        this.isRootUser = false;
       }
     },
-
+    handleCancel() {
+      this.docker = "";
+      this.dockerName = "";
+      this.isRootUser = false;
+      this.$emit('update:visible', false);
+    },
   },
   mounted() {
     if (!this.dockers) {
-      this.dockers = new Array()
+      this.dockers = new Array();
     }
     this.getDockerList();
   },
