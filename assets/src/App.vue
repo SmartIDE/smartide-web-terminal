@@ -4,6 +4,8 @@
     id="terminal"
     v-contextmenu:contextmenu
     @mousemove="handleMove"
+    @click.right="handleMouseRightClick"
+    @click.middle="handleMouseMiddleClick"
     :style="{backgroundColor: bgColor, color: fontColor}"
   >
     <div class="header">
@@ -66,6 +68,9 @@
       </div>
     </div>
     <v-contextmenu ref="contextmenu" class="contextmenu">
+      <v-contextmenu-item @click="handleMenuCopy" :disabled="vcontextmenu.copydisable">复制</v-contextmenu-item>
+      <v-contextmenu-item @click="handleMenuPaste" :disabled="vcontextmenu.pastedisable">粘贴</v-contextmenu-item>
+      <v-contextmenu-item divider></v-contextmenu-item>
       <v-contextmenu-item @click="handleCreateTab">新建Tab</v-contextmenu-item>
       <v-contextmenu-item @click="handleSplitPane">分屏</v-contextmenu-item>
       <v-contextmenu-item @click="handleDelete">关闭</v-contextmenu-item>
@@ -77,7 +82,7 @@
 </template>
 <script>
 import io from "socket.io-client";
-import uuidv4 from "uuid/v4";
+import { v4 as uuidv4 } from 'uuid';
 import { WebLinksAddon } from "xterm-addon-web-links";
 import axios from "@/apis/index";
 import Terminal from "./Xterm";
@@ -109,6 +114,10 @@ export default {
         user: "",
         name: "",
       },
+      vcontextmenu: {
+        copydisable: true,
+        pastedisable: true
+      },
       dialogVisible: false,
       dialogDockerVisible: false,
       theme: window.localStorage.getItem("theme")
@@ -137,6 +146,9 @@ export default {
     DockerModal
   },
   methods: {
+    /**
+     * 创建新terminal
+     */
     createTerminal(container, callback, cwd = null, cmd = null) {
       let that = this;
       let terminalname = "terminal" + uuidv4();
@@ -145,7 +157,7 @@ export default {
         theme: this.theme
       });
       term.loadAddon(new WebLinksAddon());
-
+      
       let pane = { term: term, name: terminalname };
 
       container.children.push(pane);
@@ -153,11 +165,37 @@ export default {
 
       callback && callback();
 
-      term.onResize(function(size) {
+      term.onResize((size) => {
         that.socket.emit(terminalname + "-resize", [size.cols, size.rows]);
       });
-      term.onData(function(data) {
+      term.onData((data) => {
         that.socket.emit(terminalname + "-input", data);
+      });
+
+      term.attachCustomKeyEventHandler((arg) => {
+        if (arg.ctrlKey && arg.code === "KeyV" && arg.type === "keydown") {
+            navigator.clipboard.readText()
+              .then(text => {
+                that.socket.emit(terminalname + "-input", text);
+              })
+        };
+        if (arg.ctrlKey && arg.code === "KeyC" && arg.type === "keydown") {
+          let selection = term.getSelection();
+          if (selection) {
+            navigator.clipboard.writeText(selection);
+            return false;
+          }
+        }
+        return true;
+      });
+
+      term.onSelectionChange(() => {
+        let selection = term.getSelection();
+        if (selection) {
+          this.vcontextmenu.copydisable = false;
+        } else {
+          this.vcontextmenu.copydisable = true;
+        }
       });
 
       this.socket.on(terminalname + "-output", arrayBuffer => {
@@ -198,9 +236,11 @@ export default {
           item.rect = item.term.element.getBoundingClientRect();
         });
       });
-
     },
-    //增加终端
+
+    /**
+     * 增加终端
+     */
     handlePlus() {
       let tab = { name: "terminal" + this.terminals.length, classify: "default", children: [] };
       this.createTerminal(tab, () => {
@@ -208,7 +248,10 @@ export default {
         this.currentTab = this.terminals.length - 1;
       });
     },
-    //删除终端
+
+    /**
+     * 删除终端
+     */
     handleDelete() {
       if (
         this.terminals.length == 1 &&
@@ -257,11 +300,13 @@ export default {
             });
           });
         }
-
         this.socket.emit("remove", name);
       }
     },
-    // 分屏
+
+    /**
+     * 分屏
+     */
     handleSplitPane() {
       let tab = this.terminals[this.currentTab];
       if (tab.children.length >= 4) {
@@ -282,7 +327,10 @@ export default {
         this.createTerminal(tab, null, cwd);
       });
     },
-    // 新建Tab
+    
+    /**
+     * 新建Tab
+     */
     handleCreateTab() {
       let tab = { name: "terminal0", classify: "default", children: [] };
       this.createTerminal(tab, () => {
@@ -291,6 +339,10 @@ export default {
       });
     },
 
+    /**
+     * 鼠标移动
+     * @param {*} event 
+     */
     handleMove(event) {
       let tab = this.terminals[this.currentTab];
       if (isInRect(tab.children[tab.currentPane].rect, event)) {
@@ -305,7 +357,47 @@ export default {
         }
       });
     },
+    
+    /**
+     * 鼠标中间click
+     */
+    handleMouseMiddleClick(e) {
+      let tab = this.terminals[this.currentTab];
+      if (tab && tab.children) {
+        let terminalname = tab.children[0].name;
+        navigator.clipboard.readText().then(text => {
+          this.socket.emit(terminalname + "-input", text);
+        });
+      }
+    },
 
+    /**
+     * 鼠标右键
+     */
+    handleMouseRightClick(e) {
+      let tab = this.terminals[this.currentTab];
+      if (tab && tab.children) {
+        let term = tab.children[0].term;
+        let selection = term.getSelection();
+        if (selection) {
+          this.vcontextmenu.copydisable = false;
+        } else {
+          this.vcontextmenu.copydisable = true;
+        }
+      }      
+      navigator.clipboard.readText().then(text => {
+        if (text) {
+          this.vcontextmenu.pastedisable = false;
+        } else {
+          this.vcontextmenu.pastedisable = true;
+        }
+      });
+
+    },
+
+    /**
+     * 修改主题
+     */
     handleChangeTheme(val) {
       this.theme = val;
       this.terminals.forEach(tab => {
@@ -316,9 +408,11 @@ export default {
 
       window.localStorage.setItem("theme", JSON.stringify(val));
     },
-    // 创建docker terminal
+
+    /**
+     * 创建docker terminal
+     */
     handleSelectDocker(val) {
-      console.log("parent" ,val)
       if (val.type === "docker") {
         this.currentDocker.user = val.user;
         this.currentDocker.name = val.name;
@@ -330,9 +424,11 @@ export default {
       } else {
         this.handlePlus();
       }
-      console.log("terminal", this.terminals)
     },
-    //增加terminal
+    
+    /**
+     * 增加terminal
+     */
     handlePlusCommand(command) {
       if (command === "docker") {
         this.dialogDockerVisible = true;
@@ -340,6 +436,10 @@ export default {
         this.handlePlus();
       }
     },
+
+    /**
+     * 删除确认
+     */
     handleDelConfirm() {
         this.$confirm('此操作将永久删除当前Terminal, 是否继续?', '提示', {
           confirmButtonText: '确定',
@@ -350,7 +450,39 @@ export default {
         }).catch(() => {
       
         });
-      },
+    },
+
+    /**
+     * 右键菜单 复制
+     */
+    handleMenuCopy() {
+      let tab = this.terminals[this.currentTab];
+      if (tab && tab.children) {
+        let term = tab.children[0].term;
+        let selection = term.getSelection();
+        if (selection) {
+          navigator.clipboard.writeText(selection);
+          return false;
+        }
+      }      
+    },
+
+    /**
+     * 右键菜单 粘贴
+     */
+    handleMenuPaste() {
+      let tab = this.terminals[this.currentTab];
+      if (tab && tab.children) {
+        let terminalname = tab.children[0].name;
+        navigator.clipboard.readText().then(text => {
+          this.socket.emit(terminalname + "-input", text);
+        });
+      }
+    },
+
+    /**
+     * 
+     */
     close() {
       if (this.terminals.length > 0) {
         this.terminals.forEach(tab => {
@@ -520,6 +652,9 @@ export default {
   color: #303133;
   min-width: 100px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+  .v-contextmenu-item--disabled {
+    color: #888;
+  }
 }
 .el-col-12:not(:last-child),
 .el-col-8:not(:last-child) {
